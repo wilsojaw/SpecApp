@@ -23,10 +23,10 @@ export function CutSheet() {
   return (
     <div className="flex flex-col gap-6">
       {/* Cut Sheet Header */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-        <div className="flex items-start justify-between">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 md:p-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900">
               {template.name} Cut Sheet
             </h2>
             <p className="text-sm text-slate-500 mt-1">
@@ -44,7 +44,7 @@ export function CutSheet() {
                 onChange={(e) =>
                   updateJobStatus(e.target.value as JobStatus)
                 }
-                className="text-sm h-9 rounded-md border border-slate-300 px-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="text-sm h-11 md:h-9 rounded-md border border-slate-300 px-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:flex-initial"
               >
                 {JOB_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -55,13 +55,13 @@ export function CutSheet() {
             )}
             <button
               onClick={() => setSaveDialogOpen(true)}
-              className="text-sm px-4 py-2 rounded-md bg-green-500 text-white font-medium hover:bg-green-600 transition-colors"
+              className="text-sm px-4 py-2.5 md:py-2 rounded-md bg-green-500 text-white font-medium hover:bg-green-600 active:bg-green-700 transition-colors flex-1 md:flex-initial"
             >
               {currentJob ? "Save" : "Save Job"}
             </button>
             <button
               onClick={() => window.print()}
-              className="text-sm px-4 py-2 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
+              className="text-sm px-4 py-2.5 md:py-2 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors flex-1 md:flex-initial"
             >
               Print
             </button>

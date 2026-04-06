@@ -122,7 +122,7 @@ export function CabinetPreview() {
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-200">
+      <div className="px-4 md:px-5 py-3 border-b border-slate-200">
         <h2 className="text-base font-semibold text-slate-900">
           Design Preview
         </h2>
@@ -132,10 +132,10 @@ export function CabinetPreview() {
           {" "}({formatInches(inputs.height + COUNTER_TOP_THICKNESS + RISER_HEIGHT)} total w/ counter top)
         </p>
       </div>
-      <div className="p-5 flex justify-center">
+      <div className="p-4 md:p-5 flex justify-center">
         <svg
           viewBox={`0 0 ${svgW} ${svgH}`}
-          className="w-full max-w-lg"
+          className="w-full md:max-w-lg"
           style={{ aspectRatio: `${svgW} / ${svgH}` }}
         >
           <defs>

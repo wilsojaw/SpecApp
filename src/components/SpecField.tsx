@@ -22,7 +22,7 @@ export function SpecField({ field, value, onChange }: SpecFieldProps) {
             const opt = field.options?.find((o) => o.value === e.target.value);
             if (opt) onChange(field.key, opt.value);
           }}
-          className="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="h-11 md:h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           {field.options?.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -109,7 +109,7 @@ function NumberInput({
           setDraft(String(num));
         }
       }}
-      className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 pr-8 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="h-11 md:h-10 w-full rounded-md border border-slate-300 bg-white px-3 pr-8 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     />
   );
 }

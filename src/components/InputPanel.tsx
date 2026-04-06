@@ -53,7 +53,7 @@ export function InputPanel() {
   }
 
   return (
-    <div className="p-5 flex flex-col gap-6">
+    <div className="p-4 md:p-5 flex flex-col gap-5 md:gap-6">
       {/* Template selector */}
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -110,7 +110,7 @@ export function InputPanel() {
                 </button>
                 <button
                   onClick={() => handleDeletePreset(preset.id)}
-                  className="text-slate-300 hover:text-red-500 text-sm ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="text-slate-300 hover:text-red-500 active:text-red-600 text-sm ml-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1"
                   title="Delete preset"
                 >
                   &times;

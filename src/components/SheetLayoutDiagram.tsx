@@ -105,7 +105,7 @@ function SheetSVG({
 
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
-        className="w-full max-w-2xl border border-slate-200 rounded-md bg-white"
+        className="w-full md:max-w-2xl border border-slate-200 rounded-md bg-white"
         style={{ aspectRatio: `${svgW} / ${svgH}` }}
       >
         {/* Hatch pattern for background */}
@@ -317,7 +317,7 @@ function SheetSizeInput({
           setDraft(String(num));
         }
       }}
-      className="w-14 h-7 rounded border border-slate-300 bg-white px-1.5 text-xs text-slate-900 font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="w-16 h-10 md:w-14 md:h-7 rounded border border-slate-300 bg-white px-1.5 text-sm md:text-xs text-slate-900 font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     />
   );
 }
@@ -330,8 +330,8 @@ export function SheetLayoutDiagram() {
 
   return (
     <div id="cutting-layout" className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden scroll-mt-4">
-      <div className="px-5 py-3 border-b border-slate-200">
-        <div className="flex items-start justify-between gap-4">
+      <div className="px-4 md:px-5 py-3 border-b border-slate-200">
+        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
               Cutting Layout
@@ -355,7 +355,7 @@ export function SheetLayoutDiagram() {
           </div>
         </div>
       </div>
-      <div className="p-5 flex flex-col gap-6">
+      <div className="p-4 md:p-5 flex flex-col gap-6">
         {packedSheets.map((packed, i) => (
           <SheetSVG
             key={i}

@@ -10,12 +10,12 @@ export function AssemblyNotes() {
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-200">
+      <div className="px-4 md:px-5 py-3 border-b border-slate-200">
         <h2 className="text-base font-semibold text-slate-900">
           Assembly Instructions
         </h2>
       </div>
-      <div className="p-5">
+      <div className="p-4 md:p-5">
         <ol className="flex flex-col gap-4">
           {assemblySteps.map((step) => (
             <li key={step.order} className="flex gap-3">

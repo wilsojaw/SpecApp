@@ -51,26 +51,26 @@ export function JobsPanel({ open, onClose }: JobsPanelProps) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative ml-auto w-full max-w-lg bg-white shadow-xl flex flex-col h-full">
+      <div className="relative ml-auto w-full md:max-w-lg bg-white shadow-xl flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 md:px-6 py-4">
           <h2 className="text-lg font-semibold text-slate-900">Jobs</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+            className="text-slate-400 hover:text-slate-600 active:text-slate-800 text-2xl leading-none p-2"
           >
             &times;
           </button>
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 px-6 pt-4 pb-2">
+        <div className="flex gap-1 px-4 md:px-6 pt-4 pb-2 overflow-x-auto">
           <button
             onClick={() => setFilter("all")}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`px-3 py-2 md:py-1.5 text-xs font-medium rounded-md transition-colors flex-shrink-0 ${
               filter === "all"
                 ? "bg-blue-500 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 active:bg-slate-300"
             }`}
           >
             All
@@ -79,10 +79,10 @@ export function JobsPanel({ open, onClose }: JobsPanelProps) {
             <button
               key={s.value}
               onClick={() => setFilter(s.value)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-2 md:py-1.5 text-xs font-medium rounded-md transition-colors flex-shrink-0 ${
                 filter === s.value
                   ? "bg-blue-500 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 active:bg-slate-300"
               }`}
             >
               {s.label}
@@ -91,7 +91,7 @@ export function JobsPanel({ open, onClose }: JobsPanelProps) {
         </div>
 
         {/* Job list */}
-        <div className="flex-1 overflow-y-auto px-6 py-3">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3">
           {loading ? (
             <p className="text-sm text-slate-400 py-8 text-center">
               Loading...
