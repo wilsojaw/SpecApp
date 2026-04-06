@@ -48,7 +48,9 @@ export function formatDimension(length: number, width: number): string {
 
 export function formatThickness(thickness: number): string {
   if (thickness === 0.75) return '3/4"';
-  if (thickness === 0.25) return '1/4"';
   if (thickness === 0.5) return '1/2"';
+  if (thickness === 0.375) return '3/8"';
+  if (thickness === 0.25) return '1/4"';
+  if (thickness === 0.125) return '1/8"';
   return formatInches(thickness);
 }

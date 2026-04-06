@@ -1,5 +1,6 @@
 import type { Part } from "../types";
 import type { WallPanelInputs } from "./defaults";
+import { formatThickness } from "@/lib/units";
 
 const FRAME_CROSSMEMBER_SPACING = 24;
 const CLEAT_HEIGHT = 1.5;
@@ -26,10 +27,10 @@ export function generateParts(inputs: WallPanelInputs): Part[] {
     frameWidth === 1.5 ? '2x2 lumber (actual 1-1/2")' : '2x3 lumber (actual 2")';
   const skinMat =
     skinMaterial === "lam-ply"
-      ? `${formatThick(skinThickness)} Lam Plywood`
+      ? `${formatThickness(skinThickness)} Lam Plywood`
       : skinMaterial === "mdf"
-        ? `${formatThick(skinThickness)} MDF`
-        : `${formatThick(skinThickness)} Sintra PVC`;
+        ? `${formatThickness(skinThickness)} MDF`
+        : `${formatThickness(skinThickness)} Sintra PVC`;
 
   // --- Frame parts (per panel, multiplied by panelCount) ---
 
@@ -153,13 +154,4 @@ export function generateParts(inputs: WallPanelInputs): Part[] {
   });
 
   return parts;
-}
-
-function formatThick(t: number): string {
-  if (t === 0.75) return '3/4"';
-  if (t === 0.5) return '1/2"';
-  if (t === 0.375) return '3/8"';
-  if (t === 0.25) return '1/4"';
-  if (t === 0.125) return '1/8"';
-  return `${t}"`;
 }

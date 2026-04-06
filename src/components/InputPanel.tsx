@@ -12,7 +12,7 @@ import {
 } from "@/lib/templates-db";
 
 export function InputPanel() {
-  const { state, setTemplateId, setInput } = useSpec();
+  const { state, setTemplateId, setInput, setAllInputs } = useSpec();
   const template = templateRegistry[state.templateId];
   const [presets, setPresets] = useState<SavedTemplate[]>([]);
   const [savePresetOpen, setSavePresetOpen] = useState(false);
@@ -33,10 +33,7 @@ export function InputPanel() {
   if (!template) return null;
 
   function loadPreset(preset: SavedTemplate) {
-    const inputs = preset.custom_inputs as unknown as Record<string, unknown>;
-    for (const [key, value] of Object.entries(inputs)) {
-      setInput(key, value);
-    }
+    setAllInputs(preset.custom_inputs as unknown as Record<string, unknown>);
   }
 
   async function handleDeletePreset(id: string) {

@@ -7,6 +7,16 @@ export type JobUpdate = TablesUpdate<"jobs">;
 
 export type JobStatus = "draft" | "in_progress" | "completed";
 
+export const JOB_STATUSES: {
+  value: JobStatus;
+  label: string;
+  color: string;
+}[] = [
+  { value: "draft", label: "Draft", color: "bg-slate-100 text-slate-700" },
+  { value: "in_progress", label: "In Progress", color: "bg-amber-100 text-amber-800" },
+  { value: "completed", label: "Completed", color: "bg-green-100 text-green-800" },
+];
+
 export async function listJobs(status?: JobStatus) {
   let query = supabase
     .from("jobs")

@@ -2,19 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSpec } from "@/context/SpecContext";
-import { listJobs, deleteJob, type Job, type JobStatus } from "@/lib/jobs";
-
-const STATUS_LABELS: Record<JobStatus, string> = {
-  draft: "Draft",
-  in_progress: "In Progress",
-  completed: "Completed",
-};
-
-const STATUS_COLORS: Record<JobStatus, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  in_progress: "bg-amber-100 text-amber-800",
-  completed: "bg-green-100 text-green-800",
-};
+import { listJobs, deleteJob, JOB_STATUSES, type Job, type JobStatus } from "@/lib/jobs";
+import { templateRegistry } from "@/templates/registry";
 
 interface JobsPanelProps {
   open: boolean;
@@ -76,17 +65,27 @@ export function JobsPanel({ open, onClose }: JobsPanelProps) {
 
         {/* Filter tabs */}
         <div className="flex gap-1 px-6 pt-4 pb-2">
-          {(["all", "draft", "in_progress", "completed"] as const).map((s) => (
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              filter === "all"
+                ? "bg-blue-500 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            All
+          </button>
+          {JOB_STATUSES.map((s) => (
             <button
-              key={s}
-              onClick={() => setFilter(s)}
+              key={s.value}
+              onClick={() => setFilter(s.value)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                filter === s
+                filter === s.value
                   ? "bg-blue-500 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {s === "all" ? "All" : STATUS_LABELS[s]}
+              {s.label}
             </button>
           ))}
         </div>
@@ -122,18 +121,19 @@ export function JobsPanel({ open, onClose }: JobsPanelProps) {
                         {job.name}
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        {job.template_type.replace("-", " ")} &middot;{" "}
+                        {templateRegistry[job.template_type]?.name ?? job.template_type} &middot;{" "}
                         {new Date(job.updated_at).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          STATUS_COLORS[job.status as JobStatus]
-                        }`}
-                      >
-                        {STATUS_LABELS[job.status as JobStatus]}
-                      </span>
+                      {(() => {
+                        const s = JOB_STATUSES.find((s) => s.value === job.status);
+                        return s ? (
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.color}`}>
+                            {s.label}
+                          </span>
+                        ) : null;
+                      })()}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

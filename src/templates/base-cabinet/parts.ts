@@ -1,5 +1,6 @@
 import type { Part } from "../types";
 import type { BaseCabinetInputs } from "./defaults";
+import { formatThickness } from "@/lib/units";
 
 const TOE_KICK_HEIGHT = 4;
 const FACE_FRAME_WIDTH = 1.5;
@@ -22,6 +23,8 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
   } = inputs;
 
   const t = materialThickness;
+  const mat = `${formatThickness(t)} Plywood`;
+  const backMat = `${formatThickness(backThickness)} Plywood`;
   const caseHeight = height - TOE_KICK_HEIGHT;
   const caseInnerWidth = width - 2 * t;
   const parts: Part[] = [];
@@ -34,7 +37,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: caseHeight,
     width: depth,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: mat,
   });
 
   // Bottom panel
@@ -45,7 +48,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: caseInnerWidth,
     width: depth,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: mat,
   });
 
   // Top stretcher
@@ -56,7 +59,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: caseInnerWidth,
     width: 4,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: mat,
   });
 
   // Back panel
@@ -67,7 +70,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: caseHeight,
     width: width,
     thickness: backThickness,
-    material: `${formatThick(backThickness)} Plywood`,
+    material: backMat,
   });
 
   // Adjustable shelves
@@ -79,7 +82,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
       length: caseInnerWidth - SHELF_CLEARANCE,
       width: depth - SHELF_SETBACK,
       thickness: t,
-      material: `${formatThick(t)} Plywood`,
+      material: mat,
     });
   }
 
@@ -91,7 +94,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: caseInnerWidth,
     width: TOE_KICK_HEIGHT,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: mat,
   });
 
   // Face frame parts (if face frame construction)
@@ -103,7 +106,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
       length: caseHeight,
       width: FACE_FRAME_WIDTH,
       thickness: t,
-      material: `${formatThick(t)} Plywood`,
+      material: mat,
       notes: "Vertical members",
     });
 
@@ -114,7 +117,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
       length: width - 2 * FACE_FRAME_WIDTH,
       width: FACE_FRAME_WIDTH,
       thickness: t,
-      material: `${formatThick(t)} Plywood`,
+      material: mat,
       notes: "Horizontal member",
     });
 
@@ -125,7 +128,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
       length: width - 2 * FACE_FRAME_WIDTH,
       width: FACE_FRAME_WIDTH,
       thickness: t,
-      material: `${formatThick(t)} Plywood`,
+      material: mat,
       notes: "Horizontal member",
     });
   }
@@ -138,7 +141,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: width,
     width: RISER_HEIGHT,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: mat,
     notes: "Sits on top of case, under counter top",
   });
 
@@ -150,7 +153,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     length: width,
     width: depth,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: mat,
     notes: "Sits on riser",
   });
 
@@ -195,14 +198,7 @@ function calculateDoors(inputs: BaseCabinetInputs): Part {
     length: doorHeight,
     width: doorWidth,
     thickness: t,
-    material: `${formatThick(t)} Plywood`,
+    material: `${formatThickness(t)} Plywood`,
     notes: inputs.doorStyle === "shaker" ? "Shaker style" : "Slab style",
   };
-}
-
-function formatThick(t: number): string {
-  if (t === 0.75) return '3/4"';
-  if (t === 0.5) return '1/2"';
-  if (t === 0.25) return '1/4"';
-  return `${t}"`;
 }

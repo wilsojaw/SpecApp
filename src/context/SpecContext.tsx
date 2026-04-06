@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   type ReactNode,
@@ -40,6 +41,7 @@ interface SpecContextValue {
   currentJob: Job | null;
   setTemplateId: (id: string) => void;
   setInput: (key: string, value: unknown) => void;
+  setAllInputs: (inputs: Record<string, unknown>) => void;
   setSheetSize: (size: SheetSize) => void;
   highlightPart: (partId: string) => void;
   saveJob: (name: string) => Promise<Job>;
@@ -78,6 +80,12 @@ export function SpecProvider({ children }: { children: ReactNode }) {
   const [currentJob, setCurrentJob] = useState<Job | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    };
+  }, []);
+
   const derived = useMemo(
     () => calculate(templateId, inputs, sheetSize),
     [templateId, inputs, sheetSize]
@@ -99,6 +107,10 @@ export function SpecProvider({ children }: { children: ReactNode }) {
 
   const setInput = useCallback((key: string, value: unknown) => {
     setInputs((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const setAllInputs = useCallback((newInputs: Record<string, unknown>) => {
+    setInputs(newInputs);
   }, []);
 
   const highlightPart = useCallback((partId: string) => {
@@ -175,6 +187,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
         currentJob,
         setTemplateId,
         setInput,
+        setAllInputs,
         setSheetSize,
         highlightPart,
         saveJob,

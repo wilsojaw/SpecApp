@@ -1,5 +1,6 @@
 import type { Part } from "../types";
 import type { DisplayCounterInputs } from "./defaults";
+import { formatThickness } from "@/lib/units";
 
 const KICK_HEIGHT = 3.5;
 const NAILER_WIDTH = 3;
@@ -19,7 +20,7 @@ export function generateParts(inputs: DisplayCounterInputs): Part[] {
   } = inputs;
 
   const t = materialThickness;
-  const mat = `${formatThick(t)} Plywood`;
+  const mat = `${formatThickness(t)} Plywood`;
   const caseHeight = height - KICK_HEIGHT;
   const caseInnerWidth = width - 2 * t;
   const parts: Part[] = [];
@@ -155,11 +156,4 @@ export function generateParts(inputs: DisplayCounterInputs): Part[] {
   }
 
   return parts;
-}
-
-function formatThick(t: number): string {
-  if (t === 0.75) return '3/4"';
-  if (t === 0.5) return '1/2"';
-  if (t === 0.25) return '1/4"';
-  return `${t}"`;
 }

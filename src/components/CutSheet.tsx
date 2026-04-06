@@ -9,13 +9,7 @@ import { PartsTable } from "./PartsTable";
 import { SheetLayoutDiagram } from "./SheetLayoutDiagram";
 import { AssemblyNotes } from "./AssemblyNotes";
 import { SaveJobDialog } from "./SaveJobDialog";
-import type { JobStatus } from "@/lib/jobs";
-
-const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
-  { value: "draft", label: "Draft" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "completed", label: "Completed" },
-];
+import { JOB_STATUSES, type JobStatus } from "@/lib/jobs";
 
 export function CutSheet() {
   const { state, currentJob, updateJobStatus } = useSpec();
@@ -52,9 +46,9 @@ export function CutSheet() {
                 }
                 className="text-sm h-9 rounded-md border border-slate-300 px-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {JOB_STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
                   </option>
                 ))}
               </select>
