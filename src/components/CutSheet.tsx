@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSpec } from "@/context/SpecContext";
 import { templateRegistry } from "@/templates/registry";
 import { formatInches } from "@/lib/units";
@@ -7,9 +8,18 @@ import { CabinetPreview } from "./CabinetPreview";
 import { PartsTable } from "./PartsTable";
 import { SheetLayoutDiagram } from "./SheetLayoutDiagram";
 import { AssemblyNotes } from "./AssemblyNotes";
+import { SaveJobDialog } from "./SaveJobDialog";
+import type { JobStatus } from "@/lib/jobs";
+
+const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
+  { value: "draft", label: "Draft" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+];
 
 export function CutSheet() {
-  const { state } = useSpec();
+  const { state, currentJob, updateJobStatus } = useSpec();
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const template = templateRegistry[state.templateId];
 
   if (!template) return null;
@@ -27,27 +37,51 @@ export function CutSheet() {
             </h2>
             <p className="text-sm text-slate-500 mt-1">
               {formatInches(inputs.width as number)} W x{" "}
-              {formatInches(inputs.height as number)} H x{" "}
-              {formatInches(inputs.depth as number)} D
-              {inputs.construction === "faceframe"
-                ? " \u00B7 Face Frame"
-                : " \u00B7 Frameless"}
+              {formatInches(inputs.height as number)} H
+              {inputs.depth != null && <> x {formatInches(inputs.depth as number)} D</>}
               {" \u00B7 "}
-              {inputs.doorStyle === "shaker" ? "Shaker" : "Slab"} Door
-              {(inputs.doorCount as number) > 1 ? "s" : ""}
+              {state.parts.reduce((sum, p) => sum + p.quantity, 0)} parts
             </p>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="flex-shrink-0 text-sm px-4 py-2 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors print:hidden"
-          >
-            Print
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0 print:hidden">
+            {currentJob && (
+              <select
+                value={currentJob.status}
+                onChange={(e) =>
+                  updateJobStatus(e.target.value as JobStatus)
+                }
+                className="text-sm h-9 rounded-md border border-slate-300 px-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={() => setSaveDialogOpen(true)}
+              className="text-sm px-4 py-2 rounded-md bg-green-500 text-white font-medium hover:bg-green-600 transition-colors"
+            >
+              {currentJob ? "Save" : "Save Job"}
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="text-sm px-4 py-2 rounded-md bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
+            >
+              Print
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Design Preview */}
-      <CabinetPreview />
+      <SaveJobDialog
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+      />
+
+      {/* Design Preview (template-specific) */}
+      {state.templateId === "base-cabinet" && <CabinetPreview />}
 
       {/* Parts Table */}
       <PartsTable />

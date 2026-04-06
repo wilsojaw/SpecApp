@@ -12,6 +12,13 @@ import {
 import type { Part, PackedSheet, AssemblyStep } from "@/templates/types";
 import { templateRegistry } from "@/templates/registry";
 import { packSheets } from "@/lib/bin-pack";
+import {
+  createJob,
+  updateJob,
+  type Job,
+  type JobStatus,
+} from "@/lib/jobs";
+import type { Json } from "@/lib/database.types";
 
 interface SheetSize {
   width: number;
@@ -30,10 +37,15 @@ interface SpecState {
 interface SpecContextValue {
   state: SpecState;
   highlightedPartId: string | null;
+  currentJob: Job | null;
   setTemplateId: (id: string) => void;
   setInput: (key: string, value: unknown) => void;
   setSheetSize: (size: SheetSize) => void;
   highlightPart: (partId: string) => void;
+  saveJob: (name: string) => Promise<Job>;
+  loadJob: (job: Job) => void;
+  updateJobStatus: (status: JobStatus) => Promise<void>;
+  newJob: () => void;
 }
 
 const SpecContext = createContext<SpecContextValue | null>(null);
@@ -63,6 +75,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
   const [inputs, setInputs] = useState<Record<string, unknown>>(defaultInputs);
   const [sheetSize, setSheetSize] = useState<SheetSize>(DEFAULT_SHEET_SIZE);
   const [highlightedPartId, setHighlightedPartId] = useState<string | null>(null);
+  const [currentJob, setCurrentJob] = useState<Job | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const derived = useMemo(
@@ -94,8 +107,82 @@ export function SpecProvider({ children }: { children: ReactNode }) {
     highlightTimer.current = setTimeout(() => setHighlightedPartId(null), 2000);
   }, []);
 
+  const saveJob = useCallback(
+    async (name: string) => {
+      const cutSheetData = {
+        parts: derived.parts,
+        packedSheets: derived.packedSheets,
+        assemblySteps: derived.assemblySteps,
+      };
+
+      if (currentJob) {
+        // Update existing job
+        const updated = await updateJob(currentJob.id, {
+          name,
+          inputs: inputs as Json,
+          sheet_size: sheetSize as unknown as Json,
+          cut_sheet_data: cutSheetData as unknown as Json,
+        });
+        setCurrentJob(updated);
+        return updated;
+      } else {
+        // Create new job
+        const created = await createJob({
+          name,
+          template_type: templateId,
+          inputs: inputs as Json,
+          sheet_size: sheetSize as unknown as Json,
+          cut_sheet_data: cutSheetData as unknown as Json,
+          status: "draft",
+        });
+        setCurrentJob(created);
+        return created;
+      }
+    },
+    [currentJob, templateId, inputs, sheetSize, derived]
+  );
+
+  const loadJob = useCallback((job: Job) => {
+    setCurrentJob(job);
+    setTemplateIdState(job.template_type);
+    setInputs(job.inputs as unknown as Record<string, unknown>);
+    if (job.sheet_size) {
+      setSheetSize(job.sheet_size as unknown as SheetSize);
+    }
+  }, []);
+
+  const updateJobStatus = useCallback(
+    async (status: JobStatus) => {
+      if (!currentJob) return;
+      const updated = await updateJob(currentJob.id, { status });
+      setCurrentJob(updated);
+    },
+    [currentJob]
+  );
+
+  const newJob = useCallback(() => {
+    setCurrentJob(null);
+    setTemplateIdState(defaultTemplateId);
+    setInputs({ ...templateRegistry[defaultTemplateId].defaultInputs });
+    setSheetSize(DEFAULT_SHEET_SIZE);
+  }, []);
+
   return (
-    <SpecContext.Provider value={{ state, highlightedPartId, setTemplateId, setInput, setSheetSize, highlightPart }}>
+    <SpecContext.Provider
+      value={{
+        state,
+        highlightedPartId,
+        currentJob,
+        setTemplateId,
+        setInput,
+        setSheetSize,
+        highlightPart,
+        saveJob,
+        loadJob,
+        updateJobStatus,
+        newJob,
+      }}
+    >
       {children}
     </SpecContext.Provider>
   );

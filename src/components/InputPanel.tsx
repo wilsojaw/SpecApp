@@ -1,14 +1,52 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { useSpec } from "@/context/SpecContext";
 import { templateRegistry, templateList } from "@/templates/registry";
 import { SpecField } from "./SpecField";
+import { SavePresetDialog } from "./SavePresetDialog";
+import {
+  listSavedTemplates,
+  deleteSavedTemplate,
+  type SavedTemplate,
+} from "@/lib/templates-db";
 
 export function InputPanel() {
   const { state, setTemplateId, setInput } = useSpec();
   const template = templateRegistry[state.templateId];
+  const [presets, setPresets] = useState<SavedTemplate[]>([]);
+  const [savePresetOpen, setSavePresetOpen] = useState(false);
+
+  const fetchPresets = useCallback(async () => {
+    try {
+      const data = await listSavedTemplates(state.templateId);
+      setPresets(data);
+    } catch (err) {
+      console.error("Failed to load presets:", err);
+    }
+  }, [state.templateId]);
+
+  useEffect(() => {
+    fetchPresets();
+  }, [fetchPresets]);
 
   if (!template) return null;
+
+  function loadPreset(preset: SavedTemplate) {
+    const inputs = preset.custom_inputs as unknown as Record<string, unknown>;
+    for (const [key, value] of Object.entries(inputs)) {
+      setInput(key, value);
+    }
+  }
+
+  async function handleDeletePreset(id: string) {
+    try {
+      await deleteSavedTemplate(id);
+      setPresets((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error("Failed to delete preset:", err);
+    }
+  }
 
   // Group fields by group name
   const groups = new Map<string, typeof template.inputSchema>();
@@ -37,6 +75,60 @@ export function InputPanel() {
         </select>
         <p className="text-xs text-slate-400 mt-1">{template.description}</p>
       </div>
+
+      {/* Saved presets */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+            Presets
+          </label>
+          <button
+            onClick={() => setSavePresetOpen(true)}
+            className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors"
+          >
+            + Save Current
+          </button>
+        </div>
+        {presets.length === 0 ? (
+          <p className="text-xs text-slate-400">No saved presets</p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {presets.map((preset) => (
+              <div
+                key={preset.id}
+                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 hover:border-blue-300 transition-colors group"
+              >
+                <button
+                  onClick={() => loadPreset(preset)}
+                  className="text-left min-w-0 flex-1"
+                >
+                  <p className="text-sm font-medium text-slate-700 truncate">
+                    {preset.name}
+                  </p>
+                  {preset.description && (
+                    <p className="text-xs text-slate-400 truncate">
+                      {preset.description}
+                    </p>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleDeletePreset(preset.id)}
+                  className="text-slate-300 hover:text-red-500 text-sm ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete preset"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <SavePresetDialog
+        open={savePresetOpen}
+        onClose={() => setSavePresetOpen(false)}
+        onSaved={fetchPresets}
+      />
 
       {/* Grouped fields */}
       {Array.from(groups.entries()).map(([groupName, fields]) => (
