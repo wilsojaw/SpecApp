@@ -16,7 +16,7 @@ const inputSchema: InputField[] = [
   },
   {
     key: "height",
-    label: "Height",
+    label: "Total Height",
     type: "number",
     min: 12,
     max: 42,

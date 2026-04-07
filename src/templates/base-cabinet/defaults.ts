@@ -11,12 +11,12 @@ export interface BaseCabinetInputs {
 }
 
 export const baseCabinetDefaults: BaseCabinetInputs = {
-  width: 36,
-  height: 34.5,
+  width: 39,
+  height: 38,
   depth: 24,
   shelfCount: 1,
   doorStyle: "slab",
-  construction: "faceframe",
+  construction: "frameless",
   doorCount: 2,
   materialThickness: 0.75,
   backThickness: 0.375,

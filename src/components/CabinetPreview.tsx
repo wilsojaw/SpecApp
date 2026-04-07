@@ -2,6 +2,7 @@
 
 import { useSpec } from "@/context/SpecContext";
 import { formatInches } from "@/lib/units";
+import { TOE_KICK_HEIGHT, RISER_HEIGHT, computeCaseHeight } from "@/templates/base-cabinet/constants";
 
 export function CabinetPreview() {
   const { state } = useSpec();
@@ -23,16 +24,16 @@ export function CabinetPreview() {
   // Scale real inches to SVG pixels
   const SCALE = 7;
   const COUNTER_TOP_THICKNESS = inputs.materialThickness;
-  const RISER_HEIGHT = 1.25;
-  const TOE_KICK_HEIGHT = 4;
+  const caseHeight = computeCaseHeight(inputs.height, inputs.materialThickness);
 
   const frontW = inputs.width * SCALE;
-  const cabinetH = inputs.height * SCALE;
+  const cabinetH = caseHeight * SCALE;
   const counterTopH = COUNTER_TOP_THICKNESS * SCALE;
   const riserH = RISER_HEIGHT * SCALE;
   const FLOAT_GAP = 40; // big gap so counter top clearly floats above
   const topPieceH = counterTopH + riserH;
-  const totalH = topPieceH + FLOAT_GAP + cabinetH;
+  const toeKickH = TOE_KICK_HEIGHT * SCALE;
+  const totalH = topPieceH + FLOAT_GAP + cabinetH + toeKickH;
   const dOffX = inputs.depth * SCALE * 0.35;
   const dOffY = -inputs.depth * SCALE * 0.25;
 
@@ -48,8 +49,7 @@ export function CabinetPreview() {
 
   // Cabinet body positioned first, then counter top floats above
   const bodyY = marginT + topPieceH + FLOAT_GAP;
-  const toeKickH = TOE_KICK_HEIGHT * SCALE;
-  const bodyH = cabinetH - toeKickH;
+  const bodyH = cabinetH;
   const cabinetBottom = bodyY + bodyH + toeKickH;
   // Counter top + riser float above with a gap
   const riserY = bodyY - FLOAT_GAP - riserH;
@@ -128,8 +128,7 @@ export function CabinetPreview() {
         </h2>
         <p className="text-xs text-slate-500 mt-0.5">
           {formatInches(inputs.width)} W x {formatInches(inputs.height)} H x{" "}
-          {formatInches(inputs.depth)} D
-          {" "}({formatInches(inputs.height + COUNTER_TOP_THICKNESS + RISER_HEIGHT)} total w/ counter top)
+          {formatInches(inputs.depth)} D (total)
         </p>
       </div>
       <div className="p-4 md:p-5 flex justify-center">
@@ -176,7 +175,7 @@ export function CabinetPreview() {
           {/* === BACK PANEL === */}
           <polygon points={`${frontX + dOffX},${bodyY + dOffY} ${frontX + frontW + dOffX},${bodyY + dOffY} ${frontX + frontW + dOffX},${bodyY + bodyH + dOffY} ${frontX + dOffX},${bodyY + bodyH + dOffY}`} fill="#c9a87c" stroke="#8b6914" strokeWidth="1" opacity="0.4" />
 
-          {/* === TOP STRETCHER === */}
+          {/* === TOP PANEL === */}
           <polygon points={`${frontX},${bodyY} ${frontX + dOffX},${bodyY + dOffY} ${frontX + frontW + dOffX},${bodyY + dOffY} ${frontX + frontW},${bodyY}`} fill="#e8d5b0" stroke="#8b6914" strokeWidth="1.5" />
           <polygon points={`${frontX},${bodyY} ${frontX + dOffX},${bodyY + dOffY} ${frontX + frontW + dOffX},${bodyY + dOffY} ${frontX + frontW},${bodyY}`} fill="url(#wood)" opacity="0.5" />
 
@@ -284,16 +283,16 @@ export function CabinetPreview() {
             {formatInches(inputs.width)}
           </text>
 
-          {/* Cabinet Height */}
-          <line x1={frontX - 65} y1={bodyY} x2={frontX - 65} y2={cabinetBottom} stroke="#94a3b8" strokeWidth="1" markerStart="url(#arrowU)" markerEnd="url(#arrowD)" />
-          <text x={frontX - 68} y={bodyY + cabinetH / 2} textAnchor="end" dominantBaseline="central" className="text-[10px] fill-slate-500 font-mono">
-            {formatInches(inputs.height)}
+          {/* Case Height (box only) */}
+          <line x1={frontX - 65} y1={bodyY} x2={frontX - 65} y2={bodyY + bodyH + toeKickH} stroke="#94a3b8" strokeWidth="1" markerStart="url(#arrowU)" markerEnd="url(#arrowD)" />
+          <text x={frontX - 68} y={bodyY + (bodyH + toeKickH) / 2} textAnchor="end" dominantBaseline="central" className="text-[10px] fill-slate-500 font-mono">
+            {formatInches(caseHeight + TOE_KICK_HEIGHT)}
           </text>
 
-          {/* Total Height (dashed to show it spans across the gap) */}
+          {/* Total Height (dashed, spans counter top through toe kick) */}
           <line x1={frontX - 95} y1={counterTopY - 4} x2={frontX - 95} y2={cabinetBottom} stroke="#64748b" strokeWidth="1" strokeDasharray="4 3" markerStart="url(#arrowU)" markerEnd="url(#arrowD)" />
           <text x={frontX - 98} y={(counterTopY - 4 + cabinetBottom) / 2} textAnchor="end" dominantBaseline="central" className="text-[9px] fill-slate-400 font-mono">
-            {formatInches(inputs.height + COUNTER_TOP_THICKNESS + RISER_HEIGHT)}
+            {formatInches(inputs.height)}
           </text>
 
           {/* Depth (along counter top surface) */}
