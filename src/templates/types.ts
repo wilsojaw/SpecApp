@@ -1,3 +1,9 @@
+export interface LaminateInfo {
+  description: string; // "Outside face + front edge", "Both faces + all edges", etc.
+  lengthEdges: number; // laminated edges along length dimension (0, 1, or 2)
+  widthEdges: number; // laminated edges along width dimension (0, 1, or 2)
+}
+
 export interface Part {
   id: string;
   name: string;
@@ -7,6 +13,7 @@ export interface Part {
   thickness: number;
   material: string;
   notes?: string;
+  laminate?: LaminateInfo;
 }
 
 export interface StockSheet {

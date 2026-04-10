@@ -8,12 +8,14 @@ import { CabinetPreview } from "./CabinetPreview";
 import { PartsTable } from "./PartsTable";
 import { SheetLayoutDiagram } from "./SheetLayoutDiagram";
 import { AssemblyNotes } from "./AssemblyNotes";
+import { LaminateChecklist } from "./LaminateChecklist";
 import { SaveJobDialog } from "./SaveJobDialog";
 import { JOB_STATUSES, type JobStatus } from "@/lib/jobs";
 
 export function CutSheet() {
   const { state, currentJob, updateJobStatus } = useSpec();
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"cutlist" | "laminate">("cutlist");
   const template = templateRegistry[state.templateId];
 
   if (!template) return null;
@@ -74,17 +76,33 @@ export function CutSheet() {
         onClose={() => setSaveDialogOpen(false)}
       />
 
-      {/* Design Preview (template-specific) */}
-      {state.templateId === "base-cabinet" && <CabinetPreview />}
+      {/* Tab Toggle */}
+      <div className="flex gap-1 bg-white rounded-lg border border-slate-200 shadow-sm p-1 print:hidden">
+        {([["cutlist", "Cut List"], ["laminate", "Laminate"]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex-1 text-sm font-medium px-4 py-2 rounded-md transition-colors ${
+              activeTab === key
+                ? "bg-blue-500 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {/* Parts Table */}
-      <PartsTable />
-
-      {/* Sheet Layout */}
-      <SheetLayoutDiagram />
-
-      {/* Assembly Notes */}
-      <AssemblyNotes />
+      {activeTab === "cutlist" ? (
+        <>
+          {state.templateId === "base-cabinet" && <CabinetPreview />}
+          <PartsTable />
+          <SheetLayoutDiagram />
+          <AssemblyNotes />
+        </>
+      ) : (
+        <LaminateChecklist />
+      )}
     </div>
   );
 }

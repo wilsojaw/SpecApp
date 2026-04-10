@@ -33,6 +33,7 @@ interface SpecState {
   parts: Part[];
   packedSheets: PackedSheet[];
   assemblySteps: AssemblyStep[];
+  laminateSelections: Record<string, boolean>;
 }
 
 interface SpecContextValue {
@@ -43,6 +44,7 @@ interface SpecContextValue {
   setInput: (key: string, value: unknown) => void;
   setAllInputs: (inputs: Record<string, unknown>) => void;
   setSheetSize: (size: SheetSize) => void;
+  toggleLaminate: (partId: string) => void;
   highlightPart: (partId: string) => void;
   saveJob: (name: string) => Promise<Job>;
   loadJob: (job: Job) => void;
@@ -60,13 +62,19 @@ function calculate(
   sheetSize: SheetSize,
 ): Omit<SpecState, "templateId" | "inputs" | "sheetSize"> {
   const template = templateRegistry[templateId];
-  if (!template) return { parts: [], packedSheets: [], assemblySteps: [] };
+  if (!template) return { parts: [], packedSheets: [], assemblySteps: [], laminateSelections: {} };
 
   const parts = template.generateParts(inputs as never);
   const packedSheets = packSheets(parts, sheetSize.width, sheetSize.height);
   const assemblySteps = template.generateAssembly(inputs as never, parts);
 
-  return { parts, packedSheets, assemblySteps };
+  // Default laminate selections: checked for parts that have laminate info
+  const laminateSelections: Record<string, boolean> = {};
+  for (const part of parts) {
+    laminateSelections[part.id] = !!part.laminate;
+  }
+
+  return { parts, packedSheets, assemblySteps, laminateSelections };
 }
 
 export function SpecProvider({ children }: { children: ReactNode }) {
@@ -78,6 +86,8 @@ export function SpecProvider({ children }: { children: ReactNode }) {
   const [sheetSize, setSheetSize] = useState<SheetSize>(DEFAULT_SHEET_SIZE);
   const [highlightedPartId, setHighlightedPartId] = useState<string | null>(null);
   const [currentJob, setCurrentJob] = useState<Job | null>(null);
+  const [laminateOverrides, setLaminateOverrides] = useState<Record<string, boolean>>({});
+  const laminateRef = useRef<Record<string, boolean>>({});
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -91,11 +101,19 @@ export function SpecProvider({ children }: { children: ReactNode }) {
     [templateId, inputs, sheetSize]
   );
 
+  // Merge user overrides into laminate defaults
+  const laminateSelections = useMemo(() => {
+    const merged = { ...derived.laminateSelections, ...laminateOverrides };
+    laminateRef.current = merged;
+    return merged;
+  }, [derived.laminateSelections, laminateOverrides]);
+
   const state: SpecState = {
     templateId,
     inputs,
     sheetSize,
     ...derived,
+    laminateSelections,
   };
 
   const setTemplateId = useCallback((id: string) => {
@@ -103,6 +121,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
     if (!template) return;
     setTemplateIdState(id);
     setInputs({ ...template.defaultInputs });
+    setLaminateOverrides({});
   }, []);
 
   const setInput = useCallback((key: string, value: unknown) => {
@@ -111,6 +130,13 @@ export function SpecProvider({ children }: { children: ReactNode }) {
 
   const setAllInputs = useCallback((newInputs: Record<string, unknown>) => {
     setInputs(newInputs);
+  }, []);
+
+  const toggleLaminate = useCallback((partId: string) => {
+    setLaminateOverrides((prev) => ({
+      ...prev,
+      [partId]: !laminateRef.current[partId],
+    }));
   }, []);
 
   const highlightPart = useCallback((partId: string) => {
@@ -125,6 +151,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
         parts: derived.parts,
         packedSheets: derived.packedSheets,
         assemblySteps: derived.assemblySteps,
+        laminateSelections,
       };
 
       if (currentJob) {
@@ -161,6 +188,13 @@ export function SpecProvider({ children }: { children: ReactNode }) {
     if (job.sheet_size) {
       setSheetSize(job.sheet_size as unknown as SheetSize);
     }
+    // Restore saved laminate selections as overrides
+    const data = job.cut_sheet_data as Record<string, unknown> | null;
+    if (data?.laminateSelections) {
+      setLaminateOverrides(data.laminateSelections as Record<string, boolean>);
+    } else {
+      setLaminateOverrides({});
+    }
   }, []);
 
   const updateJobStatus = useCallback(
@@ -177,6 +211,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
     setTemplateIdState(defaultTemplateId);
     setInputs({ ...templateRegistry[defaultTemplateId].defaultInputs });
     setSheetSize(DEFAULT_SHEET_SIZE);
+    setLaminateOverrides({});
   }, []);
 
   return (
@@ -189,6 +224,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
         setInput,
         setAllInputs,
         setSheetSize,
+        toggleLaminate,
         highlightPart,
         saveJob,
         loadJob,

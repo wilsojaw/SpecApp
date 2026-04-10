@@ -14,12 +14,12 @@ export function generateAssembly(
     parts: parts.map((p) => p.id),
   });
 
-  // Toe kick platform
+  // Toe kick platform with ribs
   steps.push({
     order: order++,
     instruction:
-      'Build the toe kick platform. Attach front, back, and side pieces to form a rectangular frame. Platform sits back 2-1/2" from cabinet edges all around.',
-    parts: ["toe-kick-fb", "toe-kick-side"],
+      'Build the toe kick frame. Attach front, back, side pieces, and ribs to form a reinforced rectangular frame. Frame sits back 2-1/2" from cabinet edges all around.',
+    parts: ["toe-kick-fb", "toe-kick-side", "toe-kick-rib"],
     joinery: "Glue and staple",
     hardware: ["Wood glue", '1-1/4" staples'],
   });
@@ -47,7 +47,7 @@ export function generateAssembly(
   steps.push({
     order: order++,
     instruction:
-      "Slide the back panel into place between the top and bottom panels for a smooth, flush back. Staple every 6 inches.",
+      "Slide the back panel into place between the top, bottom, and side panels for a completely flush back. Staple every 6 inches.",
     parts: ["back-panel"],
     joinery: "Glue and staple",
     hardware: ["Wood glue", '1-1/4" staples'],
@@ -94,12 +94,12 @@ export function generateAssembly(
     });
   }
 
-  // Place cabinet on toe kick
+  // Attach toe kick to cabinet bottom
   steps.push({
     order: order++,
     instruction:
-      "Place the assembled cabinet box onto the toe kick platform. Secure with screws from inside.",
-    parts: ["toe-kick-fb", "toe-kick-side"],
+      "Flip cabinet upside down. Attach the toe kick frame to the bottom of the cabinet by screwing through the bottom of the toe kick into the cabinet bottom panel.",
+    parts: ["toe-kick-fb", "toe-kick-side", "toe-kick-rib"],
     hardware: ['#8 x 1-1/4" screws'],
   });
 
