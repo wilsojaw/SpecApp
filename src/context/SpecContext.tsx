@@ -13,6 +13,7 @@ import {
 import type { Part, PackedSheet, AssemblyStep } from "@/templates/types";
 import { templateRegistry } from "@/templates/registry";
 import { packSheets } from "@/lib/bin-pack";
+import { lamAdjust, DEFAULT_LAMINATE_EDGES } from "@/templates/base-cabinet/constants";
 import {
   createJob,
   updateJob,
@@ -56,25 +57,46 @@ const SpecContext = createContext<SpecContextValue | null>(null);
 
 const DEFAULT_SHEET_SIZE: SheetSize = { width: 48.5, height: 96.5 };
 
-function calculate(
+function generateBase(
   templateId: string,
   inputs: Record<string, unknown>,
-  sheetSize: SheetSize,
-): Omit<SpecState, "templateId" | "inputs" | "sheetSize"> {
+) {
   const template = templateRegistry[templateId];
-  if (!template) return { parts: [], packedSheets: [], assemblySteps: [], laminateSelections: {} };
+  if (!template) return { baseParts: [] as Part[], assemblySteps: [] as AssemblyStep[], laminateDefaults: {} as Record<string, boolean> };
 
-  const parts = template.generateParts(inputs as never);
-  const packedSheets = packSheets(parts, sheetSize.width, sheetSize.height);
-  const assemblySteps = template.generateAssembly(inputs as never, parts);
+  const baseParts = template.generateParts(inputs as never);
+  const assemblySteps = template.generateAssembly(inputs as never, baseParts);
 
-  // Default laminate selections: checked for parts that have laminate info
-  const laminateSelections: Record<string, boolean> = {};
-  for (const part of parts) {
-    laminateSelections[part.id] = !!part.laminate;
+  const laminateDefaults: Record<string, boolean> = {};
+  for (const part of baseParts) {
+    laminateDefaults[part.id] = !!part.laminate;
   }
 
-  return { parts, packedSheets, assemblySteps, laminateSelections };
+  return { baseParts, assemblySteps, laminateDefaults };
+}
+
+/** Apply laminate adjustments to parts based on selections, then pack sheets */
+function applyLaminateAndPack(
+  baseParts: Part[],
+  selections: Record<string, boolean>,
+  sheetSize: SheetSize,
+) {
+  const parts = baseParts.map((part) => {
+    if (!selections[part.id]) return part;
+
+    const lEdges = part.laminate?.lengthEdges ?? DEFAULT_LAMINATE_EDGES;
+    const wEdges = part.laminate?.widthEdges ?? DEFAULT_LAMINATE_EDGES;
+    if (lEdges === 0 && wEdges === 0) return part;
+
+    return {
+      ...part,
+      length: lamAdjust(part.length, lEdges),
+      width: lamAdjust(part.width, wEdges),
+    };
+  });
+
+  const packedSheets = packSheets(parts, sheetSize.width, sheetSize.height);
+  return { parts, packedSheets };
 }
 
 export function SpecProvider({ children }: { children: ReactNode }) {
@@ -96,23 +118,32 @@ export function SpecProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const derived = useMemo(
-    () => calculate(templateId, inputs, sheetSize),
-    [templateId, inputs, sheetSize]
+  // Step 1: Generate base parts + assembly (no laminate adjustments)
+  const base = useMemo(
+    () => generateBase(templateId, inputs),
+    [templateId, inputs]
   );
 
-  // Merge user overrides into laminate defaults
+  // Step 2: Merge laminate defaults with user overrides
   const laminateSelections = useMemo(() => {
-    const merged = { ...derived.laminateSelections, ...laminateOverrides };
+    const merged = { ...base.laminateDefaults, ...laminateOverrides };
     laminateRef.current = merged;
     return merged;
-  }, [derived.laminateSelections, laminateOverrides]);
+  }, [base.laminateDefaults, laminateOverrides]);
+
+  // Step 3: Apply laminate adjustments + pack sheets (re-runs when selections OR sheet size change)
+  const { parts, packedSheets } = useMemo(
+    () => applyLaminateAndPack(base.baseParts, laminateSelections, sheetSize),
+    [base.baseParts, laminateSelections, sheetSize]
+  );
 
   const state: SpecState = {
     templateId,
     inputs,
     sheetSize,
-    ...derived,
+    parts,
+    packedSheets,
+    assemblySteps: base.assemblySteps,
     laminateSelections,
   };
 
@@ -148,9 +179,9 @@ export function SpecProvider({ children }: { children: ReactNode }) {
   const saveJob = useCallback(
     async (name: string) => {
       const cutSheetData = {
-        parts: derived.parts,
-        packedSheets: derived.packedSheets,
-        assemblySteps: derived.assemblySteps,
+        parts,
+        packedSheets,
+        assemblySteps: base.assemblySteps,
         laminateSelections,
       };
 
@@ -178,7 +209,7 @@ export function SpecProvider({ children }: { children: ReactNode }) {
         return created;
       }
     },
-    [currentJob, templateId, inputs, sheetSize, derived]
+    [currentJob, templateId, inputs, sheetSize, parts, packedSheets, base.assemblySteps, laminateSelections]
   );
 
   const loadJob = useCallback((job: Job) => {

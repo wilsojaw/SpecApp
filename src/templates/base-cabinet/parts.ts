@@ -14,8 +14,6 @@ import {
   RISER_SETBACK,
   CT_BUILDUP_HEIGHT,
   RISER_HEIGHT,
-  LAMINATE_THICKNESS,
-  LAMINATE_SIGN,
   computeCaseHeight,
 } from "./constants";
 
@@ -40,10 +38,6 @@ const LAM_FRONT_FACE: LaminateInfo = {
   lengthEdges: 0,
   widthEdges: 0,
 };
-
-function lamAdjust(base: number, edges: number): number {
-  return base + edges * LAMINATE_THICKNESS * LAMINATE_SIGN;
-}
 
 export function generateParts(inputs: BaseCabinetInputs): Part[] {
   const {
@@ -76,6 +70,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     width: depth,
     thickness: t,
     material: mat,
+    laminate: LAM_TOP_ALL_EDGES,
   });
 
   parts.push({
@@ -93,7 +88,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     name: "Side Panel",
     quantity: 2,
     length: caseInnerHeight,
-    width: lamAdjust(depth, LAM_OUTSIDE_FRONT.widthEdges),
+    width: depth,
     thickness: t,
     material: mat,
     notes: "Inset between top and bottom panels, flush to edges",
@@ -237,8 +232,8 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     id: "counter-top",
     name: "Counter Top",
     quantity: 1,
-    length: lamAdjust(width, LAM_TOP_ALL_EDGES.lengthEdges),
-    width: lamAdjust(depth, LAM_TOP_ALL_EDGES.widthEdges),
+    length: width,
+    width: depth,
     thickness: t,
     material: mat,
     notes: "Main slab, laminate covered",
@@ -249,7 +244,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     id: "ct-buildup-long",
     name: "CT Build-Up Strip (Long)",
     quantity: 2,
-    length: lamAdjust(width, LAM_TOP_ALL_EDGES.lengthEdges),
+    length: width,
     width: CT_BUILDUP_HEIGHT,
     thickness: backThickness,
     material: backMat,
@@ -260,7 +255,7 @@ export function generateParts(inputs: BaseCabinetInputs): Part[] {
     id: "ct-buildup-short",
     name: "CT Build-Up Strip (Short)",
     quantity: 2,
-    length: lamAdjust(depth - 2 * backThickness, LAM_TOP_ALL_EDGES.widthEdges),
+    length: depth - 2 * backThickness,
     width: CT_BUILDUP_HEIGHT,
     thickness: backThickness,
     material: backMat,
@@ -304,8 +299,8 @@ function calculateDoors(
     id: "door",
     name: "Door",
     quantity: doorCount,
-    length: lamAdjust(doorHeight, LAM_ALL.lengthEdges),
-    width: lamAdjust(doorWidth, LAM_ALL.widthEdges),
+    length: doorHeight,
+    width: doorWidth,
     thickness: inputs.materialThickness,
     material: mat,
     notes: inputs.doorStyle === "shaker" ? "Shaker style" : "Slab style",

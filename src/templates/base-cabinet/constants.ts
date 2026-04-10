@@ -15,6 +15,14 @@ export const LAMINATE_THICKNESS = 1 / 32;
 // +1 = cut plywood to spec, finished size is larger by laminate thickness
 export const LAMINATE_SIGN = -1;
 
+/** Apply laminate thickness adjustment to a dimension based on edge count */
+export function lamAdjust(base: number, edges: number): number {
+  return base + edges * LAMINATE_THICKNESS * LAMINATE_SIGN;
+}
+
+/** Default edge counts for parts checked in laminate checklist but without laminate info */
+export const DEFAULT_LAMINATE_EDGES = 2;
+
 export function computeCaseHeight(
   height: number,
   materialThickness: number,
