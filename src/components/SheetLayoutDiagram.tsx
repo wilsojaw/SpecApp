@@ -13,6 +13,8 @@ const LABEL_MIN_W = 50;
 const LABEL_MIN_H = 30;
 const DIM_MIN_W = 70;
 const DIM_MIN_H = 45;
+// Below this, a numbered circle won't fit inside the piece
+const NUM_INSIDE_MIN = 12;
 
 // Color palette for different parts
 const COLOR_PALETTE = [
@@ -44,6 +46,7 @@ interface LegendEntry {
   instance: string;
   dimension: string;
   color: { fill: string; stroke: string };
+  overflow: boolean;
 }
 
 function SheetSVG({
@@ -67,10 +70,12 @@ function SheetSVG({
   let refCounter = 1;
 
   // Pre-calculate which placements need legend entries
+  // Three tiers: full text label | numbered circle inside | overflow badge outside
   const placementRefs: (number | null)[] = packed.placements.map((p) => {
     const pw = p.placedWidth * SCALE;
     const ph = p.placedHeight * SCALE;
     const canShowLabel = pw >= LABEL_MIN_W && ph >= LABEL_MIN_H;
+    const canFitNumInside = Math.min(pw, ph) >= NUM_INSIDE_MIN;
 
     if (!canShowLabel) {
       const displayW = p.rotated ? p.part.length : p.part.width;
@@ -83,10 +88,49 @@ function SheetSVG({
           p.part.quantity > 1 ? ` #${p.instanceIndex + 1}` : "",
         dimension: formatDimension(displayH, displayW),
         color: colorMap[p.part.id],
+        overflow: !canFitNumInside,
       });
       return num;
     }
     return null;
+  });
+
+  // Pre-compute overflow badge positions with collision avoidance
+  const BADGE_R = 5;
+  const BADGE_SPACING = BADGE_R * 2 + 3; // diameter + gap
+  const overflowPositions: Record<number, { cx: number; cy: number }> = {};
+  const placedBadges: { cx: number; cy: number }[] = [];
+
+  packed.placements.forEach((p, i) => {
+    const ref = placementRefs[i];
+    const entry = legendEntries.find((e) => e.refNum === ref);
+    if (!ref || !entry?.overflow) return;
+
+    const px = PADDING + p.x * SCALE;
+    const py = PADDING + p.y * SCALE;
+    const pw = p.placedWidth * SCALE;
+    const ph = p.placedHeight * SCALE;
+
+    let cx = px + pw / 2;
+    let cy = py - BADGE_R - 3;
+    if (cy - BADGE_R < PADDING) {
+      cy = py + ph + BADGE_R + 3;
+    }
+    cx = Math.max(PADDING + BADGE_R, Math.min(cx, PADDING + sheetW - BADGE_R));
+
+    // Nudge horizontally until no overlap with already-placed badges
+    let attempts = 0;
+    while (attempts < 30 && placedBadges.some((b) => Math.abs(b.cx - cx) < BADGE_SPACING && Math.abs(b.cy - cy) < BADGE_SPACING)) {
+      cx += BADGE_SPACING;
+      if (cx + BADGE_R > PADDING + sheetW) {
+        cx = PADDING + BADGE_R;
+        cy -= BADGE_SPACING;
+      }
+      attempts++;
+    }
+
+    placedBadges.push({ cx, cy });
+    overflowPositions[ref] = { cx, cy };
   });
 
   return (
@@ -158,6 +202,8 @@ function SheetSVG({
             color={colorMap[p.part.id]}
             refNum={placementRefs[i]}
             highlighted={p.part.id === highlightedPartId}
+            overflow={legendEntries.find((e) => e.refNum === placementRefs[i])?.overflow ?? false}
+            badgePos={placementRefs[i] ? overflowPositions[placementRefs[i]!] : undefined}
           />
         ))}
       </svg>
@@ -192,11 +238,15 @@ function PlacedPart({
   color,
   refNum,
   highlighted,
+  overflow,
+  badgePos,
 }: {
   placement: Placement;
   color: { fill: string; stroke: string };
   refNum: number | null;
   highlighted: boolean;
+  overflow: boolean;
+  badgePos?: { cx: number; cy: number };
 }) {
   const { part, x, y, placedWidth, placedHeight } = placement;
 
@@ -250,8 +300,32 @@ function PlacedPart({
             </text>
           )}
         </>
+      ) : overflow && badgePos ? (
+        /* Badge floated outside with pre-computed collision-free position */
+        <>
+          <line
+            x1={px + pw / 2}
+            y1={py}
+            x2={badgePos.cx}
+            y2={badgePos.cy + 5}
+            stroke={color.stroke}
+            strokeWidth="0.75"
+            opacity="0.5"
+          />
+          <circle cx={badgePos.cx} cy={badgePos.cy} r={5} fill={color.stroke} opacity="0.9" />
+          <text
+            x={badgePos.cx}
+            y={badgePos.cy}
+            textAnchor="middle"
+            dominantBaseline="central"
+            className="text-[7px] fill-white font-bold"
+            style={{ pointerEvents: "none" }}
+          >
+            {refNum}
+          </text>
+        </>
       ) : (
-        /* Numbered reference for small parts */
+        /* Numbered circle inside for medium-small parts */
         <>
           <circle
             cx={px + pw / 2}
