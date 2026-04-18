@@ -4,6 +4,11 @@ import type { Tables, TablesInsert, TablesUpdate } from "./database.types";
 export type Job = Tables<"jobs">;
 export type JobInsert = TablesInsert<"jobs">;
 export type JobUpdate = TablesUpdate<"jobs">;
+export type JobSummary = Pick<
+  Job,
+  "id" | "name" | "workspace_id" | "template_type" | "status" | "updated_at"
+>;
+const SUMMARY_COLUMNS = "id, name, workspace_id, template_type, status, updated_at";
 
 export type JobStatus = "draft" | "in_progress" | "completed";
 
@@ -17,10 +22,42 @@ export const JOB_STATUSES: {
   { value: "completed", label: "Completed", color: "bg-green-100 text-green-800" },
 ];
 
-export async function listJobs(status?: JobStatus) {
+export async function listRecentJobs(limit = 5): Promise<JobSummary[]> {
+  const { data, error } = await supabase
+    .from("jobs")
+    .select(SUMMARY_COLUMNS)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function copyJob(sourceId: string, targetWorkspaceId: string) {
+  const source = await getJob(sourceId);
+  const { data, error } = await supabase
+    .from("jobs")
+    .insert({
+      name: source.name,
+      template_type: source.template_type,
+      template_id: source.template_id,
+      inputs: source.inputs,
+      sheet_size: source.sheet_size,
+      cut_sheet_data: source.cut_sheet_data,
+      notes: source.notes,
+      status: "draft",
+      workspace_id: targetWorkspaceId,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listJobs(workspaceId: string, status?: JobStatus) {
   let query = supabase
     .from("jobs")
     .select("*")
+    .eq("workspace_id", workspaceId)
     .order("updated_at", { ascending: false });
 
   if (status) {

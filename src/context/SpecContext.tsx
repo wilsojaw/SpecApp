@@ -21,6 +21,7 @@ import {
   type JobStatus,
 } from "@/lib/jobs";
 import type { Json } from "@/lib/database.types";
+import { useWorkspace } from "@/context/WorkspaceContext";
 
 interface SheetSize {
   width: number;
@@ -100,6 +101,7 @@ function applyLaminateAndPack(
 }
 
 export function SpecProvider({ children }: { children: ReactNode }) {
+  const { selectedWorkspace } = useWorkspace();
   const defaultTemplateId = "base-cabinet";
   const defaultInputs = { ...templateRegistry[defaultTemplateId].defaultInputs };
 
@@ -107,16 +109,38 @@ export function SpecProvider({ children }: { children: ReactNode }) {
   const [inputs, setInputs] = useState<Record<string, unknown>>(defaultInputs);
   const [sheetSize, setSheetSize] = useState<SheetSize>(DEFAULT_SHEET_SIZE);
   const [highlightedPartId, setHighlightedPartId] = useState<string | null>(null);
-  const [currentJob, setCurrentJob] = useState<Job | null>(null);
+  const [currentJob, setCurrentJobState] = useState<Job | null>(null);
   const [laminateOverrides, setLaminateOverrides] = useState<Record<string, boolean>>({});
   const laminateRef = useRef<Record<string, boolean>>({});
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentJobWorkspaceRef = useRef<string | null>(null);
+  const setCurrentJob = useCallback((job: Job | null) => {
+    currentJobWorkspaceRef.current = job?.workspace_id ?? null;
+    setCurrentJobState(job);
+  }, []);
+
+  const resetSpecDefaults = useCallback(() => {
+    currentJobWorkspaceRef.current = null;
+    setCurrentJobState(null);
+    setTemplateIdState(defaultTemplateId);
+    setInputs({ ...templateRegistry[defaultTemplateId].defaultInputs });
+    setSheetSize(DEFAULT_SHEET_SIZE);
+    setLaminateOverrides({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
       if (highlightTimer.current) clearTimeout(highlightTimer.current);
     };
   }, []);
+
+  const workspaceId = selectedWorkspace?.id ?? null;
+  useEffect(() => {
+    // Skip reset when a just-loaded job already belongs to the new workspace
+    if (workspaceId && currentJobWorkspaceRef.current === workspaceId) return;
+    resetSpecDefaults();
+  }, [workspaceId, resetSpecDefaults]);
 
   // Step 1: Generate base parts + assembly (no laminate adjustments)
   const base = useMemo(
@@ -197,6 +221,9 @@ export function SpecProvider({ children }: { children: ReactNode }) {
         return updated;
       } else {
         // Create new job
+        if (!selectedWorkspace) {
+          throw new Error("Cannot create job without a selected workspace");
+        }
         const created = await createJob({
           name,
           template_type: templateId,
@@ -204,12 +231,13 @@ export function SpecProvider({ children }: { children: ReactNode }) {
           sheet_size: sheetSize as unknown as Json,
           cut_sheet_data: cutSheetData as unknown as Json,
           status: "draft",
+          workspace_id: selectedWorkspace.id,
         });
         setCurrentJob(created);
         return created;
       }
     },
-    [currentJob, templateId, inputs, sheetSize, parts, packedSheets, base.assemblySteps, laminateSelections]
+    [currentJob, templateId, inputs, sheetSize, parts, packedSheets, base.assemblySteps, laminateSelections, selectedWorkspace]
   );
 
   const loadJob = useCallback((job: Job) => {
@@ -238,12 +266,8 @@ export function SpecProvider({ children }: { children: ReactNode }) {
   );
 
   const newJob = useCallback(() => {
-    setCurrentJob(null);
-    setTemplateIdState(defaultTemplateId);
-    setInputs({ ...templateRegistry[defaultTemplateId].defaultInputs });
-    setSheetSize(DEFAULT_SHEET_SIZE);
-    setLaminateOverrides({});
-  }, []);
+    resetSpecDefaults();
+  }, [resetSpecDefaults]);
 
   return (
     <SpecContext.Provider

@@ -27,6 +27,7 @@ export type Database = {
           template_id: string | null
           template_type: string
           updated_at: string
+          workspace_id: string
         }
         Insert: {
           created_at?: string
@@ -40,6 +41,7 @@ export type Database = {
           template_id?: string | null
           template_type: string
           updated_at?: string
+          workspace_id: string
         }
         Update: {
           created_at?: string
@@ -53,6 +55,7 @@ export type Database = {
           template_id?: string | null
           template_type?: string
           updated_at?: string
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -60,6 +63,13 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -90,6 +100,27 @@ export type Database = {
           id?: string
           name?: string
           template_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      workspaces: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useSpec } from "@/context/SpecContext";
+import { useWorkspace } from "@/context/WorkspaceContext";
+import { displayName } from "@/lib/workspaces";
 import { InputPanel } from "./InputPanel";
 import { CutSheet } from "./CutSheet";
-import { JobsPanel } from "./JobsPanel";
 
 export function Dashboard() {
   const { currentJob, newJob } = useSpec();
-  const [jobsPanelOpen, setJobsPanelOpen] = useState(false);
+  const { selectedWorkspace, goToJobs } = useWorkspace();
   const [inputPanelOpen, setInputPanelOpen] = useState(false);
 
   return (
@@ -17,15 +18,19 @@ export function Dashboard() {
       <header className="flex-shrink-0 border-b border-slate-200 bg-white px-4 py-3 md:px-6 md:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center justify-center w-8 h-8 rounded bg-blue-500 text-white font-bold text-sm flex-shrink-0">
-              S
-            </div>
+            <button
+              onClick={goToJobs}
+              className="text-sm px-2 py-1.5 rounded-md text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-medium transition-colors flex-shrink-0 print:hidden"
+              aria-label="Back to jobs"
+            >
+              ← Jobs
+            </button>
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold text-slate-900 leading-tight">
-                SpecApp
+              <h1 className="text-lg font-semibold text-slate-900 leading-tight truncate">
+                {currentJob ? currentJob.name : "New Job"}
               </h1>
               <p className="text-xs text-slate-500 truncate">
-                {currentJob ? currentJob.name : "Cut Sheet Generator"}
+                {selectedWorkspace ? displayName(selectedWorkspace) : "Cut Sheet Generator"}
               </p>
             </div>
           </div>
@@ -44,17 +49,9 @@ export function Dashboard() {
                 + New
               </button>
             )}
-            <button
-              onClick={() => setJobsPanelOpen(true)}
-              className="text-sm px-3 py-2 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300 font-medium transition-colors"
-            >
-              Jobs
-            </button>
           </div>
         </div>
       </header>
-
-      <JobsPanel open={jobsPanelOpen} onClose={() => setJobsPanelOpen(false)} />
 
       {/* Mobile input drawer */}
       {inputPanelOpen && (

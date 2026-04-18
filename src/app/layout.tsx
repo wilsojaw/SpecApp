@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SpecProvider } from "@/context/SpecContext";
+import { WorkspaceProvider } from "@/context/WorkspaceContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,7 +36,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="h-full font-sans bg-white text-slate-900">
-        <SpecProvider>{children}</SpecProvider>
+        <WorkspaceProvider>
+          <SpecProvider>{children}</SpecProvider>
+        </WorkspaceProvider>
       </body>
     </html>
   );
